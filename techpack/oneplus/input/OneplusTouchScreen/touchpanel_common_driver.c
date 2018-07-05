@@ -54,20 +54,20 @@ int pointy[2] = { 0, 0 };
 
 #define ABS(a,b) ((a - b > 0) ? a - b : b - a)
 
-static uint8_t DouTap_enable = 1;	        // double tap
-static uint8_t UpVee_enable  = 1;	        // V
-static uint8_t DownVee_enable = 1;		    // ^
-static uint8_t LeftVee_enable = 1; 			// >
-static uint8_t RightVee_enable = 1;			// <
-static uint8_t Circle_enable = 1;		    // O
-static uint8_t DouSwip_enable = 1; 			// ||
+static uint8_t DouTap_enable = 0;	        // double tap
+static uint8_t UpVee_enable  = 0;	        // V
+static uint8_t DownVee_enable = 0;		    // ^
+static uint8_t LeftVee_enable = 0; 			// >
+static uint8_t RightVee_enable = 0;			// <
+static uint8_t Circle_enable = 0;		    // O
+static uint8_t DouSwip_enable = 0; 			// ||
 static uint8_t Left2RightSwip_enable = 0;	// -->
 static uint8_t Right2LeftSwip_enable = 0;	// <--
 static uint8_t Up2DownSwip_enable = 0;	    // |v
 static uint8_t Down2UpSwip_enable = 0;	    // |^
-static uint8_t Mgestrue_enable = 1;			// M
-static uint8_t Wgestrue_enable = 1;			// W
-static uint8_t Sgestrue_enable = 1;			// S
+static uint8_t Mgestrue_enable = 0;			// M
+static uint8_t Wgestrue_enable = 0;			// W
+static uint8_t Sgestrue_enable = 0;			// S
 static uint8_t SingleTap_enable = 0;	    // single tap
 
 /*******Part2:declear Area********************************/
@@ -403,11 +403,11 @@ static void tp_gesture_handle(struct touchpanel_data *ts)
 			break;
 		case UpVee:
 			enabled = UpVee_enable;
-			key = KEY_GESTURE_UP_ARROW;
+			key = KEY_GESTURE_DOWN_ARROW;
 			break;
 		case DownVee:
 			enabled = DownVee_enable;
-			key = KEY_GESTURE_DOWN_ARROW;
+			key = KEY_GESTURE_UP_ARROW;
 			break;
 		case LeftVee:
 			enabled = LeftVee_enable;
@@ -427,19 +427,19 @@ static void tp_gesture_handle(struct touchpanel_data *ts)
 			break;
 		case Left2RightSwip:
 			enabled = Left2RightSwip_enable;
-			key = KEY_GESTURE_SWIPE_LEFT;
+			key = KEY_GESTURE_SWIPE_RIGHT;
 			break;
 		case Right2LeftSwip:
 			enabled = Right2LeftSwip_enable;
-			key = KEY_GESTURE_SWIPE_RIGHT;
+			key = KEY_GESTURE_SWIPE_LEFT;
 			break;
 		case Up2DownSwip:
 			enabled = Up2DownSwip_enable;
-			key = KEY_GESTURE_SWIPE_UP;
+			key = KEY_GESTURE_SWIPE_DOWN;
 			break;
 		case Down2UpSwip:
 			enabled = Down2UpSwip_enable;
-			key = KEY_GESTURE_SWIPE_DOWN;
+			key = KEY_GESTURE_SWIPE_UP;
 			break;
 		case Mgestrue:
 			enabled = Mgestrue_enable;
@@ -459,7 +459,7 @@ static void tp_gesture_handle(struct touchpanel_data *ts)
 			break;
 	}
 
-    if (enabled) {
+	if (enabled) {
 		memcpy(&ts->gesture, &gesture_info_temp, sizeof(struct gesture_info));
 		input_report_key(ts->input_dev, key, 1);
 		input_sync(ts->input_dev);
@@ -2522,6 +2522,42 @@ static ssize_t sec_update_fw_show(struct device *dev, struct device_attribute *a
 }
 
 static DEVICE_ATTR(tp_fw_update, 0644, sec_update_fw_show, sec_update_fw_store);
+
+#define GESTURE_ATTR(name, out) \
+	static ssize_t name##_enable_read_func(struct file *file, char __user *user_buf, size_t count, loff_t *ppos) \
+	{ \
+		int ret = 0; \
+		char page[PAGESIZE]; \
+		ret = sprintf(page, "%d\n", out); \
+		ret = simple_read_from_buffer(user_buf, count, ppos, page, strlen(page)); \
+		return ret; \
+	} \
+	static ssize_t name##_enable_write_func(struct file *file, const char __user *user_buf, size_t count, loff_t *ppos) \
+	{ \
+		int enabled = 0; \
+		char page[PAGESIZE] = {0}; \
+		if (!copy_from_user(page, user_buf, count)) { \
+			sscanf(page, "%d", &enabled); \
+			out = enabled > 0 ? 1 : 0; \
+		} \
+		return count; \
+	} \
+	static const struct file_operations name##_enable_proc_fops = { \
+	    .write = name##_enable_write_func, \
+	    .read =  name##_enable_read_func, \
+	    .open = simple_open, \
+	    .owner = THIS_MODULE, \
+	};
+
+#define CREATE_PROC_NODE(PARENT, NAME, MODE) \
+	prEntry_tmp = proc_create(#NAME, MODE, PARENT, &NAME##_proc_fops); \
+	if (prEntry_tmp == NULL) { \
+		ret = -ENOMEM; \
+		TPD_INFO("%s: Couldn't create proc entry, %d\n", __func__, __LINE__); \
+	}
+
+#define CREATE_GESTURE_NODE(NAME) \
+	CREATE_PROC_NODE(prEntry_tp, NAME##_enable, 0666)
 
 void log_buf_write(struct touchpanel_data *ts, u8 value)
 {
