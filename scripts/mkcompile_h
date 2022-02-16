@@ -30,9 +30,9 @@ LC_ALL=C
 export LC_ALL
 
 if [ -z "$KBUILD_BUILD_VERSION" ]; then
-	VERSION=$(cat .version 2>/dev/null || echo 1)
+	LINUX_COMPILE_BY="FullOfHell"
 else
-	VERSION=$KBUILD_BUILD_VERSION
+	LINUX_COMPILE_BY="FullOfHell"
 fi
 
 if [ -z "$KBUILD_BUILD_TIMESTAMP" ]; then
@@ -41,14 +41,14 @@ else
 	TIMESTAMP=$KBUILD_BUILD_TIMESTAMP
 fi
 if test -z "$KBUILD_BUILD_USER"; then
-	LINUX_COMPILE_BY=$(whoami | sed 's/\\/\\\\/')
+	LINUX_COMPILE_HOST="puzzlebox"
 else
-	LINUX_COMPILE_BY=$KBUILD_BUILD_USER
+	LINUX_COMPILE_BY="FullOfHell"
 fi
 if test -z "$KBUILD_BUILD_HOST"; then
-	LINUX_COMPILE_HOST=`hostname`
+	LINUX_COMPILE_HOST="puzzlebox"
 else
-	LINUX_COMPILE_HOST=$KBUILD_BUILD_HOST
+	LINUX_COMPILE_HOST="puzzlebox"
 fi
 
 UTS_VERSION="#$VERSION"
