@@ -5,7 +5,7 @@ if [[ "${1}" != "skip" ]] ; then
 	./build_kernel.sh "$@" || exit 1
 fi
 
-VERSION="$(cat version)-$(date +%F | sed s@-@@g)"
+VERSION="r20a3-$(date +%F | sed s@-@@g)"
 
 if [ -e boot.img ] ; then
 	rm arter97-kernel-$VERSION.zip 2>/dev/null
@@ -15,7 +15,7 @@ if [ -e boot.img ] ; then
 	rm -rf kernelzip
 	mkdir kernelzip
 	echo "
-kernel.string=arter97 kernel $(cat version) @ xda-developers
+kernel.string=arter97 kernel r20a1 @ xda-developers
 do.devicecheck=0
 do.modules=0
 do.cleanup=1
