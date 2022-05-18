@@ -180,7 +180,8 @@ $(filter-out _all sub-make $(lastword $(MAKEFILE_LIST)), $(MAKECMDGOALS)) _all: 
 
 # Invoke a second make in the output directory, passing relevant variables
 sub-make:
-	$(Q)$(MAKE) -C $(abs_objtree) -f $(abs_srctree)/Makefile $(MAKECMDGOALS)
+	$(Q)$(MAKE) -C $(KBUILD_OUTPUT) KBUILD_SRC=$(CURDIR) \
+	-f $(CURDIR)/Makefile $(filter-out _all sub-make,$(MAKECMDGOALS))
 
 endif # need-sub-make
 endif # sub_make_done
@@ -361,7 +362,13 @@ include scripts/subarch.include
 # Alternatively CROSS_COMPILE can be set in the environment.
 # Default value for CROSS_COMPILE is not to prefix executables
 # Note: Some architectures assign CROSS_COMPILE in their arch/*/Makefile
-ARCH		?= $(SUBARCH)
+override ARCH		:= arm64
+override CROSS_COMPILE	:= /home/karthik/arm64-gcc/bin/aarch64-elf-
+override CROSS_COMPILE_ARM32	:= /home/karthik/arm32-gcc/bin/arm-eabi-
+override LLVM := 1
+override LLVM_IAS := 1
+override CLANG_TRIPLE := aarch64-linux-gnu
+override LLVM_PATH := /home/karthik/yaap/prebuilts/clang/host/linux-x86/clang-r450784e/bin/
 
 # Architecture as present in compile.h
 UTS_MACHINE 	:= $(ARCH)
@@ -1191,8 +1198,6 @@ cmd_link-vmlinux =                                                 \
 
 vmlinux: scripts/link-vmlinux.sh autoksyms_recursive $(vmlinux-deps) FORCE
 	+$(call if_changed,link-vmlinux)
-
-targets := vmlinux
 
 # The actual objects are generated when descending,
 # make sure no implicit rule kicks in
